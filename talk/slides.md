@@ -17,6 +17,9 @@ March 2014
 * The HTTP request via NSURLConnection is asynchronous.
 * The hourly requests start from an NSTimer.
 
+![bread](bread.jpg)
+
+https://git@github.com/pjungwir/ios-async-talk-xcode
 
 
 # With just one thread
@@ -28,7 +31,10 @@ March 2014
 
 
 
+
 # Threading primitives
+
+![Herding cats](herding-cats.jpg)
 
 * atomic operators
 * pthread mutexes
@@ -37,16 +43,49 @@ March 2014
 * NSRecursiveLock, NSConditionLock, NSDistributedLock
 * NSCondition
 
+.notes With multiple threads, everything becomes unpredictable: "maybe", "could", etc.
+.notes Each thread can have its own copy of memory values: memory visibility
+.notes So even after thread A writes something, thread B may not see it.
+.notes We control this with memory boundaries, formed by locks and other things.
+
+.notes What are each of the above things?
+
+.notes Error-prone
+.notes Can result in *slow* code, because too many locks.
+.notes Can have deadlocks.
+
+
+
+
+# Deadlock
+
+- Thread A: grab lock A: got it.
+- Thread B: grab lock B: got it.
+- Thread A: grab lock B: block.
+- Thread B: grab lock A: block.
+
+TODO: picture
+
+- Always take locks in the same order.
+- Take one big lock.
+
+.notes People spend lots of effort to avoid threads.
+.notes Python and Ruby have a GIL, so really there is no parallelism.
+.notes Javascript is single-threaded.
+.notes Node.js early-on billed async callbacks as easier to learn than threads.
+.notes Systems languages need real multi-threading, but they try to provider higher-level abstractions.
+.notes Java has an amazing java.util.concurrent.* package.
+.notes Objective-C has some things too.
+
+
 
 
 # Higher-Level Alternatives
 
-* passing selectors to asynchronous methods
-* passing blocks to asynchronous methods
-* calling a selector on a different thread
 * GCD: dispatch_async
 * NSOperation, NSOperationQueue
 
+TODO: picture
 
 
 
@@ -106,6 +145,7 @@ March 2014
 .notes scheduledTimerWithTimeInterval:target:selector:userInfo:repeats: will fire the timer on the same run loop that you''re on now.
 .notes So far everything is just one thread.
 .notes The timer's callback is just like any other event, e.g. a touch event.
+.notes Even Javascript has timers.
 
 
 
@@ -127,6 +167,8 @@ March 2014
   }
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+![Mac beach ball](beach-ball.jpg)
 
 .notes This will block your app
 .notes Don''t do it!
