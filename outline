@@ -1,0 +1,9 @@
+- quick overview of ARC, strong/weak references.
+- blocks & closures, including the "strong-weak dance" that is
+sometimes required.
+- techniques to write memory from multiple threads.
+- GCD.
+- queues and dispatch_async.
+- for examples, NSTimer and NSURLConnection, maybe also
+addObserverForName since that requires special handling to avoid a
+retain cycle.
