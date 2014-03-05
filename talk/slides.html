@@ -37,7 +37,12 @@
 <li>Runs at app startup, then once an hour.</li>
 <li>The HTTP request via NSURLConnection is asynchronous.</li>
 <li>The hourly requests start from an NSTimer.</li>
-</ul></section><section class="slide" id="with_just_one_thread"><h2>With just one thread</h2>
+</ul>
+<p><img src="bread.jpg" alt="bread"></p>
+
+<p>https://<a href="mailto:git@github.com">git@github.com</a>/pjungwir/ios-async-talk-xcode</p>
+
+</section><section class="slide" id="with_just_one_thread"><h2>With just one thread</h2>
 
 <ul>
 <li>Your app has a "run loop".</li>
@@ -46,6 +51,8 @@
 <li>Everything is one thread, unless you do something special.</li>
 </ul></section><section class="slide" id="threading_primitives"><h2>Threading primitives</h2>
 
+<p><img src="herding-cats.jpg" alt="Herding cats"></p>
+
 <ul>
 <li>atomic operators</li>
 <li>pthread mutexes</li>
@@ -53,15 +60,28 @@
 <li>@synchronized(obj) { }</li>
 <li>NSRecursiveLock, NSConditionLock, NSDistributedLock</li>
 <li>NSCondition</li>
+</ul></section><section class="slide" id="deadlock"><h2>Deadlock</h2>
+
+<ul>
+<li>Thread A: grab lock A: got it.</li>
+<li>Thread B: grab lock B: got it.</li>
+<li>Thread A: grab lock B: block.</li>
+<li>Thread B: grab lock A: block.</li>
+</ul>
+<p>TODO: picture</p>
+
+<ul>
+<li>Always take locks in the same order.</li>
+<li>Take one big lock.</li>
 </ul></section><section class="slide" id="higherlevel_alternatives"><h2>Higher-Level Alternatives</h2>
 
 <ul>
-<li>passing selectors to asynchronous methods</li>
-<li>passing blocks to asynchronous methods</li>
-<li>calling a selector on a different thread</li>
 <li>GCD: dispatch_async</li>
 <li>NSOperation, NSOperationQueue</li>
-</ul></section><section class="slide" id="rules"><h2>Rules</h2>
+</ul>
+<p>TODO: picture</p>
+
+</section><section class="slide" id="rules"><h2>Rules</h2>
 
 <ul>
 <li>UI updates must happen on the main run loop.</li>
@@ -69,7 +89,9 @@
 <li>. . . or keep all reads/writes on one thread!</li>
 </ul></section><section class="slide" id="our_restaurant_app"><h2>Our Restaurant App</h2>
 
-<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyAppDelegate</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="c1">// branch: master</span>
+
+<span class="k">@implementation</span> <span class="nc">MyAppDelegate</span> <span class="p">{</span>
   <span class="n">NSArray</span> <span class="o">*</span><span class="n">_restaurants</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -86,7 +108,9 @@
 
 </section><section class="slide" id="with_a_timer"><h2>With a timer</h2>
 
-<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span> <span class="nl">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="n">application</span>
+<div class="highlight"><pre><span class="c1">// branch: master</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span> <span class="nl">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="n">application</span>
   <span class="nl">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="n">launchOptions</span> <span class="p">{</span>
   <span class="p">[</span><span class="n">self</span> <span class="n">fetchRestaurants</span><span class="p">];</span>
 
@@ -95,13 +119,16 @@
                                  <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="n">fetchRestaurants</span><span class="p">)</span>
                                  <span class="nl">userInfo:</span><span class="nb">nil</span>
                                   <span class="nl">repeats:</span><span class="n">YES</span><span class="p">];</span>
+  <span class="c1">// . . .</span>
 <span class="p">}</span>
 </pre></div>
 
 
 </section><section class="slide" id="sync_http_request"><h2>Sync HTTP Request</h2>
 
-<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">fetchRestaurants</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="c1">// branch: sync</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">fetchRestaurants</span> <span class="p">{</span>
   <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
   <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
   <span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">;</span>
@@ -116,9 +143,13 @@
 </pre></div>
 
 
+<p><img src="beach-ball.jpg" alt="Mac beach ball"></p>
+
 </section><section class="slide" id="async_http_request"><h2>Async HTTP Request</h2>
 
-<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">fetchRestaurants</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="c1">// branch: async-notification</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">fetchRestaurants</span> <span class="p">{</span>
   <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
   <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
   <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">];</span>
@@ -136,7 +167,9 @@
 
 </section><section class="slide" id="parsing_the_json"><h2>Parsing the JSON</h2>
 
-<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyRestaurant</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="c1">// branch: async-notification</span>
+
+<span class="k">@implementation</span> <span class="nc">MyRestaurant</span> <span class="p">{</span>
 <span class="o">+</span> <span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span> <span class="nl">parseJSON:</span><span class="p">(</span><span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="n">d</span> <span class="p">{</span>
   <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="n">new</span><span class="p">];</span>
   <span class="n">NSError</span> <span class="o">*</span><span class="n">jsonError</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
@@ -160,7 +193,9 @@
 <li>add it to the queue</li>
 <li>post a notification when done</li>
 </ul>
-<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyParseRestaurantsOperation</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="c1">// branch: async-notification</span>
+
+<span class="k">@implementation</span> <span class="nc">MyParseRestaurantsOperation</span> <span class="p">{</span>
     <span class="n">NSData</span> <span class="o">*</span><span class="n">_data</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -186,6 +221,7 @@
 </section><section class="slide" id="async_parsing_with_nsoperationqueue"><h2>Async parsing with NSOperationQueue</h2>
 
 <div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+<span class="c1">// branch: async-notification</span>
 
 <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
     <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
@@ -213,6 +249,7 @@
 </section><section class="slide" id="getting_an_nsnotification_from_our_queue"><h2>Getting an NSNotification from our queue.</h2>
 
 <div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+<span class="c1">// branch: async-notification</span>
 
 <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">parsedRestaurants:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="n">n</span> <span class="p">{</span>
     <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
@@ -230,6 +267,8 @@
 </section><section class="slide" id="setcompletionblock_to_avoid_notifications"><h2>setCompletionBlock to avoid notifications</h2>
 
 <div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+<span class="c1">// branch: async-completion-block</span>
+
   <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">op</span> <span class="o">=</span>
     <span class="p">[[</span><span class="n">MyParseRestaurantsOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithData:</span><span class="n">d</span><span class="p">];</span>
   <span class="p">[</span><span class="n">op</span> <span class="nl">setCompletionBlock:</span><span class="o">^</span><span class="p">{</span>
@@ -274,6 +313,8 @@
 <li>Make sure the instance didn't disappear in the meantime.</li>
 </ul>
 <div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+<span class="c1">// branch: async-completion-block</span>
+
   <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">op</span> <span class="o">=</span>
     <span class="p">[[</span><span class="n">MyParseRestaurantsOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithData:</span><span class="n">d</span><span class="p">];</span>
   <span class="n">__weak</span> <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">weakOp</span> <span class="o">=</span> <span class="n">op</span><span class="p">;</span>
@@ -293,6 +334,7 @@
 </section><section class="slide" id="block_as_nsoperation"><h2>Block as NSOperation</h2>
 
 <div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+<span class="c1">// branch: async-block-as-nsoperation</span>
 
 <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
     <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
@@ -305,7 +347,7 @@
          <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
              <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">background</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">new</span><span class="p">];</span>
              <span class="p">[</span><span class="n">background</span> <span class="nl">addOperationWithBlock:</span><span class="o">^</span><span class="p">{</span>
-                 <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">_data</span><span class="p">];</span>
+                 <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">d</span><span class="p">];</span>
                  <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
                                                           <span class="nl">withObject:</span><span class="n">restaurants</span>
                                                                <span class="nl">waitUntilDone:</span><span class="n">NO</span><span class="p">];</span>
@@ -319,6 +361,7 @@
 </section><section class="slide" id="do_the_nsurlconnection_callback_on_a_different_queue"><h2>Do the NSURLConnection callback on a different queue</h2>
 
 <div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+<span class="c1">// branch: async-urlconnection-callback-different-queue</span>
 
 <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
     <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
@@ -329,7 +372,7 @@
                            <span class="nl">completionHandler:</span>
      <span class="o">^</span><span class="p">(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">,</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
          <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
-             <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">_data</span><span class="p">];</span>
+             <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">d</span><span class="p">];</span>
              <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
                                                       <span class="nl">withObject:</span><span class="n">restaurants</span>
                                                            <span class="nl">waitUntilDone:</span><span class="n">NO</span><span class="p">];</span>
@@ -405,6 +448,7 @@
           <li><a href="#restaurant_review_app">Restaurant Review App</a></li>
           <li><a href="#with_just_one_thread">With just one thread</a></li>
           <li><a href="#threading_primitives">Threading primitives</a></li>
+          <li><a href="#deadlock">Deadlock</a></li>
           <li><a href="#higherlevel_alternatives">Higher-Level Alternatives</a></li>
           <li><a href="#rules">Rules</a></li>
           <li><a href="#our_restaurant_app">Our Restaurant App</a></li>

@@ -11,12 +11,43 @@
 
 
 
+
 # With just one thread
 
 
 
 
+
 # Threading primitives
+
+
+
+.notes With multiple threads, everything becomes unpredictable: "maybe", "could", etc.
+.notes Each thread can have its own copy of memory values: memory visibility
+.notes So even after thread A writes something, thread B may not see it.
+.notes We control this with memory boundaries, formed by locks and other things.
+
+.notes What are each of the above things?
+
+.notes Error-prone
+.notes Can result in *slow* code, because too many locks.
+.notes Can have deadlocks.
+
+
+
+
+# Deadlock
+
+
+
+
+.notes People spend lots of effort to avoid threads.
+.notes Python and Ruby have a GIL, so really there is no parallelism.
+.notes Javascript is single-threaded.
+.notes Node.js early-on billed async callbacks as easier to learn than threads.
+.notes Systems languages need real multi-threading, but they try to provider higher-level abstractions.
+.notes Java has an amazing java.util.concurrent.* package.
+.notes Objective-C has some things too.
 
 
 
@@ -40,6 +71,7 @@
 
 
 
+
 .notes In the old days you had to use retain and release.
 .notes Now we have ARC.
 .notes But sharing data between threads is tricky.
@@ -56,11 +88,14 @@
 .notes scheduledTimerWithTimeInterval:target:selector:userInfo:repeats: will fire the timer on the same run loop that you''re on now.
 .notes So far everything is just one thread.
 .notes The timer's callback is just like any other event, e.g. a touch event.
+.notes Even Javascript has timers.
 
 
 
 
 # Sync HTTP Request
+
+
 
 
 .notes This will block your app
@@ -70,6 +105,7 @@
 
 
 # Async HTTP Request
+
 
 
 .notes No blocking your app
@@ -88,6 +124,7 @@
 # Parsing the JSON
 
 
+
 .notes Here is the code to parse the JSON, just in case you''re interested.
 .notes Pretty easy, even with no libraries!
 .notes NSJSONSerialization requires iOS 5+
@@ -97,6 +134,7 @@
 
 
 # Async parsing with NSOperation
+
 
 
 
@@ -133,6 +171,7 @@
 
 
 # setCompletionBlock to avoid notifications
+
 
 
 .notes No need for notifications.
@@ -178,6 +217,7 @@
 
 
 
+
 .notes This is called the "weak-strong dance", recommended by Apple at WWDC.
 .notes We close on the weak reference.
 .notes We give ourselves a strong reference so the object doesn't disappear early.
@@ -204,6 +244,7 @@
 
 .notes Note q is no longer the main queue.
 .notes Again, no need for separate NSOperation subclass.
+.notes Really simple!
 .notes Still a hassle to get back onto main thread.
 
 
