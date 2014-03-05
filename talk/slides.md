@@ -103,6 +103,8 @@ TODO: picture
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: master
+
 @implementation MyAppDelegate {
   NSArray *_restaurants;
 }
@@ -128,6 +130,7 @@ TODO: picture
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: master
 
 - (BOOL) application:(UIApplication *)application
   didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -138,6 +141,7 @@ TODO: picture
                                  selector:@selector(fetchRestaurants)
                                  userInfo:nil
                                   repeats:YES];
+  // . . .
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -154,6 +158,8 @@ TODO: picture
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: sync
+
 - (void) fetchRestaurants {
   NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
   NSURLRequest *req = [NSURLRequest requestWithURL:url];
@@ -180,6 +186,8 @@ TODO: picture
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: async-notification
+
 - (void) fetchRestaurants {
   NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
   NSURLRequest *req = [NSURLRequest requestWithURL:url];
@@ -212,6 +220,8 @@ TODO: picture
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: async-notification
+
 @implementation MyRestaurant {
 + (NSArray *) parseJSON:(NSData *)d {
   NSMutableArray *restaurants = [NSMutableArray new];
@@ -244,6 +254,8 @@ TODO: picture
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: async-notification
+
 @implementation MyParseRestaurantsOperation {
     NSData *_data;
 }
@@ -274,6 +286,7 @@ TODO: picture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
 // MyAppDelegate.m:
+// branch: async-notification
 
 - (void)fetchRestaurants {
     NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
@@ -309,6 +322,7 @@ TODO: picture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
 // MyAppDelegate.m:
+// branch: async-notification
 
 - (void)parsedRestaurants:(NSNotification *)n {
     [self performSelectorOnMainThread:@selector(updateRestaurants:)
@@ -337,6 +351,8 @@ TODO: picture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
 // MyAppDelegate.m:
+// branch: async-completion-block
+
   MyParseRestaurantsOperation *op =
     [[MyParseRestaurantsOperation alloc] initWithData:d];
   [op setCompletionBlock:^{
@@ -404,6 +420,8 @@ Watch out closing over _ivars!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
 // MyAppDelegate.m:
+// branch: async-completion-block
+
   MyParseRestaurantsOperation *op =
     [[MyParseRestaurantsOperation alloc] initWithData:d];
   __weak MyParseRestaurantsOperation *weakOp = op;
@@ -434,6 +452,7 @@ Watch out closing over _ivars!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
 // MyAppDelegate.m:
+// branch: async-block-as-nsoperation
 
 - (void)fetchRestaurants {
     NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
@@ -446,7 +465,7 @@ Watch out closing over _ivars!
          if (d) {
              NSOperationQueue *background = [NSOperationQueue new];
              [background addOperationWithBlock:^{
-                 NSArray *restaurants = [MyRestaurant parseJSON:self->_data];
+                 NSArray *restaurants = [MyRestaurant parseJSON:d];
                  [self performSelectorOnMainThread:@selector(updateRestaurants:)
                                                           withObject:restaurants
                                                                waitUntilDone:NO];
@@ -467,6 +486,7 @@ Watch out closing over _ivars!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
 // MyAppDelegate.m:
+// branch: async-urlconnection-callback-different-queue
 
 - (void)fetchRestaurants {
     NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
@@ -477,7 +497,7 @@ Watch out closing over _ivars!
                            completionHandler:
      ^(NSURLResponse *resp, NSData *d, NSError *err) {
          if (d) {
-             NSArray *restaurants = [MyRestaurant parseJSON:self->_data];
+             NSArray *restaurants = [MyRestaurant parseJSON:d];
              [self performSelectorOnMainThread:@selector(updateRestaurants:)
                                                       withObject:restaurants
                                                            waitUntilDone:NO];
@@ -488,6 +508,7 @@ Watch out closing over _ivars!
 
 .notes Note q is no longer the main queue.
 .notes Again, no need for separate NSOperation subclass.
+.notes Really simple!
 .notes Still a hassle to get back onto main thread.
 
 
