@@ -72,10 +72,6 @@
 
 
 
-.notes In the old days you had to use retain and release.
-.notes Now we have ARC.
-.notes But sharing data between threads is tricky.
-
 
 
 
@@ -85,7 +81,7 @@
 
 
 .notes Timers fire on a given run loop.
-.notes scheduledTimerWithTimeInterval:target:selector:userInfo:repeats: will fire the timer on the same run loop that you''re on now.
+.notes scheduledTimerWithTimeInterval:target:selector:userInfo:repeats: will fire the timer on the same run loop that you're on now.
 .notes So far everything is just one thread.
 .notes The timer's callback is just like any other event, e.g. a touch event.
 .notes Even Javascript has timers.
@@ -99,7 +95,7 @@
 
 
 .notes This will block your app
-.notes Don''t do it!
+.notes Don't do it!
 
 
 
@@ -125,7 +121,7 @@
 
 
 
-.notes Here is the code to parse the JSON, just in case you''re interested.
+.notes Here is the code to parse the JSON, just in case you're interested.
 .notes Pretty easy, even with no libraries!
 .notes NSJSONSerialization requires iOS 5+
 .notes What if we want to parse on a background thread also?
@@ -141,6 +137,8 @@
 
 
 
+.notes This is the heavy way to do it: define a subclass, add it to the queue.
+.notes Also the most flexible.
 .notes Now we'll launch this operation on a background queue:
 
 
@@ -212,7 +210,7 @@
 
 
 
-# setCompletionBlock without memory leak
+# setCompletionBlock without memory leak: "weak-strong dance"
 
 
 
@@ -233,6 +231,8 @@
 
 
 .notes No need to subclass NSOperation.
+.notes Everything is in one place: more readable.
+.notes But that block is no longer reusable, not testable: tradeoff.
 .notes But now there's no place to call setCompletionBlock, so back to trampolining.
 
 
@@ -251,6 +251,7 @@
 
 
 # Async parsing with GCD
+
 
 
 

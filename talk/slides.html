@@ -30,6 +30,8 @@
 
 <p>March 2014</p>
 
+<p><a href="https://github.com/pjungwir/ios-async-talk-xcode">https://github.com/pjungwir/ios-async-talk-xcode</a></p>
+
 </section><section class="slide" id="restaurant_review_app"><h2>Restaurant Review App</h2>
 
 <ul>
@@ -40,7 +42,7 @@
 </ul>
 <p><img src="bread.jpg" alt="bread"></p>
 
-<p>https://<a href="mailto:git@github.com">git@github.com</a>/pjungwir/ios-async-talk-xcode</p>
+<p><a href="https://github.com/pjungwir/ios-async-talk-xcode">https://github.com/pjungwir/ios-async-talk-xcode</a></p>
 
 </section><section class="slide" id="with_just_one_thread"><h2>With just one thread</h2>
 
@@ -62,24 +64,21 @@
 <li>NSCondition</li>
 </ul></section><section class="slide" id="deadlock"><h2>Deadlock</h2>
 
-<ul>
-<li>Thread A: grab lock A: got it.</li>
-<li>Thread B: grab lock B: got it.</li>
-<li>Thread A: grab lock B: block.</li>
-<li>Thread B: grab lock A: block.</li>
-</ul>
-<p>TODO: picture</p>
+<p><img src="deadlock.png" alt="Thread deadlock"></p>
+
+<p>Options:</p>
 
 <ul>
 <li>Always take locks in the same order.</li>
 <li>Take one big lock.</li>
+<li>Don't use locks.</li>
 </ul></section><section class="slide" id="higherlevel_alternatives"><h2>Higher-Level Alternatives</h2>
 
 <ul>
 <li>GCD: dispatch_async</li>
 <li>NSOperation, NSOperationQueue</li>
 </ul>
-<p>TODO: picture</p>
+<p><img src="async-abstractions.png" alt="Async abstractions"></p>
 
 </section><section class="slide" id="rules"><h2>Rules</h2>
 
@@ -299,13 +298,13 @@
 
 <p>Usually it's a problem with <code>self</code>.</p>
 
-<p>Watch out closing over _ivars!</p>
+<p>Watch out closing over _ivars! (<code>self-&gt;_op</code>)</p>
 
 </section><section class="slide" id="setcompletionblock_copies_the_block"><h2>setCompletionBlock copies the block</h2>
 
 <p><img src="setCompletionBlock.png" alt="setCompletionBlock docs"></p>
 
-</section><section class="slide" id="setcompletionblock_without_memory_leak"><h2>setCompletionBlock without memory leak</h2>
+</section><section class="slide" id="setcompletionblock_without_memory_leak_weakstrong_dance"><h2>setCompletionBlock without memory leak: "weak-strong dance"</h2>
 
 <ul>
 <li>Close over a weak reference.</li>
@@ -386,7 +385,9 @@
 
 <p>Set up a dispatch_queue with GCD:</p>
 
-<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyAppDelegate</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="c1">// branch: async-gcd</span>
+
+<span class="k">@implementation</span> <span class="nc">MyAppDelegate</span> <span class="p">{</span>
   <span class="n">NSArray</span> <span class="o">*</span><span class="n">_restaurants</span><span class="p">;</span>
   <span class="n">dispatch_queue_t</span> <span class="n">_restaurants_queue</span><span class="p">;</span>
 <span class="p">}</span>
@@ -403,7 +404,9 @@
 
 <p>Do our parsing on our own queue:</p>
 
-<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="c1">// branch: async-gcd</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
   <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
   <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
   <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">];</span>
@@ -432,6 +435,7 @@
 <li><a href="http://www.raywenderlich.com/4295/multithreading-and-grand-central-dispatch-on-ios-for-beginners-tutorial">http://www.raywenderlich.com/4295/multithreading-and-grand-central-dispatch-on-ios-for-beginners-tutorial</a></li>
 <li><a href="http://www.raywenderlich.com/19788/how-to-use-nsoperations-and-nsoperationqueues">http://www.raywenderlich.com/19788/how-to-use-nsoperations-and-nsoperationqueues</a></li>
 <li><a href="http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341">http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341</a></li>
+<li><a href="http://www.amazon.com/Java-Threads-Scott-Oaks/dp/0596007825">http://www.amazon.com/Java-Threads-Scott-Oaks/dp/0596007825</a></li>
 <li><a href="https://github.com/pjungwir/ios-async-talk">https://github.com/pjungwir/ios-async-talk</a></li>
 <li><a href="https://github.com/pjungwir/ios-async-talk-xcode">https://github.com/pjungwir/ios-async-talk-xcode</a></li>
 </ul></section><section class="slide" id="thanks"><h2>Thanks!</h2>
@@ -463,7 +467,7 @@
           <li><a href="#retain_cycles">Retain Cycles</a></li>
           <li><a href="#blocks_and_retain_cycles">Blocks and retain cycles</a></li>
           <li><a href="#setcompletionblock_copies_the_block">setCompletionBlock copies the block</a></li>
-          <li><a href="#setcompletionblock_without_memory_leak">setCompletionBlock without memory leak</a></li>
+          <li><a href="#setcompletionblock_without_memory_leak_weakstrong_dance">setCompletionBlock without memory leak: "weak-strong dance"</a></li>
           <li><a href="#block_as_nsoperation">Block as NSOperation</a></li>
           <li><a href="#do_the_nsurlconnection_callback_on_a_different_queue">Do the NSURLConnection callback on a different queue</a></li>
           <li><a href="#async_parsing_with_gcd">Async parsing with GCD</a></li>

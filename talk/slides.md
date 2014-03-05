@@ -8,6 +8,7 @@ PDX iOS
 
 March 2014
 
+https://github.com/pjungwir/ios-async-talk-xcode
 
 
 # Restaurant Review App
@@ -19,7 +20,7 @@ March 2014
 
 ![bread](bread.jpg)
 
-https://git@github.com/pjungwir/ios-async-talk-xcode
+https://github.com/pjungwir/ios-async-talk-xcode
 
 
 # With just one thread
@@ -59,15 +60,13 @@ https://git@github.com/pjungwir/ios-async-talk-xcode
 
 # Deadlock
 
-- Thread A: grab lock A: got it.
-- Thread B: grab lock B: got it.
-- Thread A: grab lock B: block.
-- Thread B: grab lock A: block.
+![Thread deadlock](deadlock.png)
 
-TODO: picture
+Options:
 
 - Always take locks in the same order.
 - Take one big lock.
+- Don't use locks.
 
 .notes People spend lots of effort to avoid threads.
 .notes Python and Ruby have a GIL, so really there is no parallelism.
@@ -85,7 +84,7 @@ TODO: picture
 * GCD: dispatch_async
 * NSOperation, NSOperationQueue
 
-TODO: picture
+![Async abstractions](async-abstractions.png)
 
 
 
@@ -119,10 +118,6 @@ TODO: picture
 @end
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.notes In the old days you had to use retain and release.
-.notes Now we have ARC.
-.notes But sharing data between threads is tricky.
-
 
 
 
@@ -146,7 +141,7 @@ TODO: picture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .notes Timers fire on a given run loop.
-.notes scheduledTimerWithTimeInterval:target:selector:userInfo:repeats: will fire the timer on the same run loop that you''re on now.
+.notes scheduledTimerWithTimeInterval:target:selector:userInfo:repeats: will fire the timer on the same run loop that you're on now.
 .notes So far everything is just one thread.
 .notes The timer's callback is just like any other event, e.g. a touch event.
 .notes Even Javascript has timers.
@@ -177,7 +172,7 @@ TODO: picture
 ![Mac beach ball](beach-ball.jpg)
 
 .notes This will block your app
-.notes Don''t do it!
+.notes Don't do it!
 
 
 
@@ -238,7 +233,7 @@ TODO: picture
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.notes Here is the code to parse the JSON, just in case you''re interested.
+.notes Here is the code to parse the JSON, just in case you're interested.
 .notes Pretty easy, even with no libraries!
 .notes NSJSONSerialization requires iOS 5+
 .notes What if we want to parse on a background thread also?
@@ -278,6 +273,8 @@ TODO: picture
 @end
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.notes This is the heavy way to do it: define a subclass, add it to the queue.
+.notes Also the most flexible.
 .notes Now we'll launch this operation on a background queue:
 
 
@@ -396,7 +393,7 @@ If you are in turn retaining the block (perhaps indirectly), you have a retain c
 
 Usually it's a problem with `self`.
 
-Watch out closing over _ivars!
+Watch out closing over \_ivars! (`self->_op`)
 
 .notes To know if a block is copied, check the docs.
 .notes XCode might warn you, but it isn't always right.
@@ -411,7 +408,7 @@ Watch out closing over _ivars!
 
 
 
-# setCompletionBlock without memory leak
+# setCompletionBlock without memory leak: "weak-strong dance"
 
 - Close over a weak reference.
 - Give the block its own strong reference.
@@ -476,6 +473,8 @@ Watch out closing over _ivars!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .notes No need to subclass NSOperation.
+.notes Everything is in one place: more readable.
+.notes But that block is no longer reusable, not testable: tradeoff.
 .notes But now there's no place to call setCompletionBlock, so back to trampolining.
 
 
@@ -520,6 +519,8 @@ Set up a dispatch_queue with GCD:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: async-gcd
+
 @implementation MyAppDelegate {
   NSArray *_restaurants;
   dispatch_queue_t _restaurants_queue;
@@ -544,6 +545,7 @@ Do our parsing on our own queue:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @@@ objc
+// branch: async-gcd
 
 - (void)fetchRestaurants {
   NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
@@ -579,6 +581,7 @@ Do our parsing on our own queue:
 * http://www.raywenderlich.com/4295/multithreading-and-grand-central-dispatch-on-ios-for-beginners-tutorial
 * http://www.raywenderlich.com/19788/how-to-use-nsoperations-and-nsoperationqueues
 * http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341
+* http://www.amazon.com/Java-Threads-Scott-Oaks/dp/0596007825
 * https://github.com/pjungwir/ios-async-talk
 * https://github.com/pjungwir/ios-async-talk-xcode
 
