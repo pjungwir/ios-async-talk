@@ -290,6 +290,55 @@
 </pre></div>
 
 
+</section><section class="slide" id="block_as_nsoperation"><h2>Block as NSOperation</h2>
+
+<div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
+    <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
+    <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
+    <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">];</span>
+    <span class="p">[</span><span class="n">NSURLConnection</span> <span class="nl">sendAsynchronousRequest:</span><span class="n">req</span>
+                                       <span class="nl">queue:</span><span class="n">q</span>
+                           <span class="nl">completionHandler:</span>
+     <span class="o">^</span><span class="p">(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">,</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
+         <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+             <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">background</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">new</span><span class="p">];</span>
+             <span class="p">[</span><span class="n">background</span> <span class="nl">addOperationWithBlock:</span><span class="o">^</span><span class="p">{</span>
+                 <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">_data</span><span class="p">];</span>
+                 <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
+                                                          <span class="nl">withObject:</span><span class="n">restaurants</span>
+                                                               <span class="nl">waitUntilDone:</span><span class="n">NO</span><span class="p">];</span>
+             <span class="p">}];</span>
+         <span class="p">}</span>
+     <span class="p">}];</span>
+<span class="p">}</span>
+</pre></div>
+
+
+</section><section class="slide" id="do_the_nsurlconnection_callback_on_a_different_queue"><h2>Do the NSURLConnection callback on a different queue</h2>
+
+<div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
+    <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
+    <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
+    <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">new</span><span class="p">];</span>
+    <span class="p">[</span><span class="n">NSURLConnection</span> <span class="nl">sendAsynchronousRequest:</span><span class="n">req</span>
+                                       <span class="nl">queue:</span><span class="n">q</span>
+                           <span class="nl">completionHandler:</span>
+     <span class="o">^</span><span class="p">(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">,</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
+         <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+             <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">_data</span><span class="p">];</span>
+             <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
+                                                      <span class="nl">withObject:</span><span class="n">restaurants</span>
+                                                           <span class="nl">waitUntilDone:</span><span class="n">NO</span><span class="p">];</span>
+         <span class="p">}</span>
+     <span class="p">}];</span>
+<span class="p">}</span>
+</pre></div>
+
+
 </section><section class="slide" id="async_parsing_with_gcd"><h2>Async parsing with GCD</h2>
 
 <p>Set up a dispatch_queue with GCD:</p>
@@ -301,7 +350,7 @@
 
 <span class="o">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nl">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="n">application</span>
   <span class="nl">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="n">launchOptions</span> <span class="p">{</span>
-  <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants_queue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="s">"com.example.restaurants"</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span>
+  <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants_queue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="s">"com.example.restaurants"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
   <span class="p">[</span><span class="n">self</span> <span class="n">fetchRestaurants</span><span class="p">];</span>
 <span class="p">}</span>
 </pre></div>
@@ -324,6 +373,7 @@
           <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">d</span><span class="p">];</span>
           <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
             <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants</span> <span class="o">=</span> <span class="n">restaurants</span><span class="p">;</span>
+            <span class="p">[((</span><span class="n">MyViewController</span> <span class="o">*</span><span class="p">)</span><span class="n">self</span><span class="p">.</span><span class="n">window</span><span class="p">.</span><span class="n">rootViewController</span><span class="p">).</span><span class="n">tableView</span> <span class="n">reloadData</span><span class="p">];</span>
           <span class="p">});</span>
         <span class="p">});</span>
       <span class="p">}</span>
@@ -341,7 +391,13 @@
 <li><a href="http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341">http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341</a></li>
 <li><a href="https://github.com/pjungwir/ios-async-talk">https://github.com/pjungwir/ios-async-talk</a></li>
 <li><a href="https://github.com/pjungwir/ios-async-talk-xcode">https://github.com/pjungwir/ios-async-talk-xcode</a></li>
-</ul></section><a class="deck-prev-link" href="#" title="Previous"></a><a class="deck-next-link" href="#" title="Next"></a>    <div class="slide_toc">      <div class="toggle">[contents]</div>
+</ul></section><section class="slide" id="thanks"><h2>Thanks!</h2>
+
+<p>Paul Jungwirth</p>
+
+<p><a href="mailto:pj@illuminatedcomputing.com">pj@illuminatedcomputing.com</a></p>
+
+</section><a class="deck-prev-link" href="#" title="Previous"></a><a class="deck-next-link" href="#" title="Next"></a>    <div class="slide_toc">      <div class="toggle">[contents]</div>
       <div class="table">
         <h2>deck.rb presentation</h2>
         <ul>
@@ -364,9 +420,12 @@
           <li><a href="#blocks_and_retain_cycles">Blocks and retain cycles</a></li>
           <li><a href="#setcompletionblock_copies_the_block">setCompletionBlock copies the block</a></li>
           <li><a href="#setcompletionblock_without_memory_leak">setCompletionBlock without memory leak</a></li>
+          <li><a href="#block_as_nsoperation">Block as NSOperation</a></li>
+          <li><a href="#do_the_nsurlconnection_callback_on_a_different_queue">Do the NSURLConnection callback on a different queue</a></li>
           <li><a href="#async_parsing_with_gcd">Async parsing with GCD</a></li>
           <li><a href="#async_parsing_with_gcd">Async parsing with GCD</a></li>
           <li><a href="#references_and_further_reading">References and Further Reading</a></li>
+          <li><a href="#thanks">Thanks!</a></li>
         </ul>
 </div>
     </div>

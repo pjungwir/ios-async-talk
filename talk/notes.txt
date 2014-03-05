@@ -188,6 +188,27 @@
 
 
 
+# Block as NSOperation
+
+
+
+.notes No need to subclass NSOperation.
+.notes But now there's no place to call setCompletionBlock, so back to trampolining.
+
+
+
+
+# Do the NSURLConnection callback on a different queue
+
+
+
+.notes Note q is no longer the main queue.
+.notes Again, no need for separate NSOperation subclass.
+.notes Still a hassle to get back onto main thread.
+
+
+
+
 # Async parsing with GCD
 
 
@@ -205,7 +226,20 @@
 
 
 
+.notes Everything is right here: the JSON parsing, the state & UI update.
+.notes WWDC 2011 videos mention dispatch_retain/dispatch_release; no need for that with ARC in iOS6+.
+
+
+
 
 # References and Further Reading
+
+
+
+
+
+
+# Thanks!
+
 
 
