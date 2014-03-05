@@ -10,9 +10,15 @@ html: assets
 	# deck -b slides.md
 	curl http://localhost:4333 > slides.html
 	perl -p -i -e 's#/deck.js#deck.js#g' slides.html
-	perl -p -i -e 's#/coderay.css#coderay.css#g' slides.html
+	perl -p -i -e 's#/pygments.css#pygments.css#g' slides.html
 	perl -p -i -e 's#/tables.css#tables.css#g' slides.html
 	perl -p -i -e 's#/toc.css#toc.css#g' slides.html
 
 assets:
 	cp -r `bundle show deckrb`/public/* .
+
+notes: notes.txt
+
+notes.txt: slides.md
+	egrep '^(\.notes|#|$$)' slides.md > notes.txt
+

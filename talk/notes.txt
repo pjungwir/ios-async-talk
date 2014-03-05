@@ -1,0 +1,211 @@
+# Asynchronous Programming in iOS
+
+
+
+
+
+
+
+# Restaurant Review App
+
+
+
+
+# With just one thread
+
+
+
+
+# Threading primitives
+
+
+
+
+# Higher-Level Alternatives
+
+
+
+
+
+
+# Rules
+
+
+
+
+
+# Our Restaurant App
+
+
+
+
+
+.notes In the old days you had to use retain and release.
+.notes Now we have ARC.
+.notes But sharing data between threads is tricky.
+
+
+
+
+# With a timer
+
+
+
+
+.notes Timers fire on a given run loop.
+.notes scheduledTimerWithTimeInterval:target:selector:userInfo:repeats: will fire the timer on the same run loop that you''re on now.
+.notes So far everything is just one thread.
+.notes The timer's callback is just like any other event, e.g. a touch event.
+
+
+
+
+# Sync HTTP Request
+
+
+.notes This will block your app
+.notes Don''t do it!
+
+
+
+
+# Async HTTP Request
+
+
+.notes No blocking your app
+.notes NSOperationQueue holds a list of TODO items, will process serially.
+.notes Each TODO item is an NSOperation, which you can subclass
+.notes You can define dependencies between NSOperations.
+.notes NSURLConnection handles the internals for us
+.notes Our callback runs on the main thread b/c we asked for the main operation queue.
+
+.notes Everyone okay with blocks? Javascript callbacks, C pointers-to-function, Ruby blocks, C# delegates/lambda expressions, Python lambdas
+.notes Blocks form closures: they can hold onto outside values in their lexical scope (e.g. the self above).
+
+
+
+
+# Parsing the JSON
+
+
+.notes Here is the code to parse the JSON, just in case you''re interested.
+.notes Pretty easy, even with no libraries!
+.notes NSJSONSerialization requires iOS 5+
+.notes What if we want to parse on a background thread also?
+
+
+
+
+# Async parsing with NSOperation
+
+
+
+
+
+
+.notes Now we'll launch this operation on a background queue:
+
+
+
+# Async parsing with NSOperationQueue
+
+
+.notes Here we are creating a new queue and adding our operation.
+.notes Probably we should create the queue once on initialization, not every time.
+.notes Now let's look at how we handle the notification.
+
+
+
+
+# Getting an NSNotification from our queue.
+
+
+
+
+.notes We receive notifications on the same run loop they were posted on.
+.notes So we need to "trampoline" to the main run loop.
+.notes We use performSelectorOnMainThread for trampolining.
+
+.notes Technically we should also make sure we unregister ourselves from the notification, because NSNotificationCenter only gets a weak reference to us.
+.notes But there are easier ways to do all this!
+
+
+
+
+# setCompletionBlock to avoid notifications
+
+
+.notes No need for notifications.
+.notes The block is called on an unspecified thread, not the main thread.
+.notes Still need to trampoline to the main queue to update state and UI.
+.notes Oops, a retain cycle!
+
+
+
+
+
+# Retain Cycles
+
+
+.notes Retain cycles are the bane of reference-counting memory management.
+.notes Object A retains B and B retains A, so neither is ever deallocated.
+
+
+
+
+# Blocks and retain cycles
+
+
+
+
+
+
+
+.notes To know if a block is copied, check the docs.
+.notes XCode might warn you, but it isn't always right.
+
+
+
+
+# setCompletionBlock copies the block
+
+
+
+
+
+# setCompletionBlock without memory leak
+
+
+
+
+.notes This is called the "weak-strong dance", recommended by Apple at WWDC.
+.notes We close on the weak reference.
+.notes We give ourselves a strong reference so the object doesn't disappear early.
+.notes Because we aren't *closing* over strongOp, when it goes out of scope it gets released.
+
+.notes But there is an even cleaner way to do it!
+
+
+
+
+# Async parsing with GCD
+
+
+
+
+.notes Technically GCD is lower-level than NSOperation.
+.notes It makes it easy to do everything in blocks, with no NSOperation subclass.
+
+
+
+
+# Async parsing with GCD
+
+
+
+
+
+
+# References and Further Reading
+
+

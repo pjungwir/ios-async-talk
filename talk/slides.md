@@ -400,7 +400,7 @@ Set up a dispatch_queue with GCD:
 
 - (BOOL)application:(UIApplication *)application
   didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-  self->_restaurants_queue = dispatch_queue_create("com.example.restaurants", nil);
+  self->_restaurants_queue = dispatch_queue_create("com.example.restaurants", NULL);
   [self fetchRestaurants];
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -448,4 +448,14 @@ Do our parsing on our own queue:
 * http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341
 * https://github.com/pjungwir/ios-async-talk
 * https://github.com/pjungwir/ios-async-talk-xcode
+
+
+
+
+
+# Thanks!
+
+Paul Jungwirth
+
+pj@illuminatedcomputing.com
 

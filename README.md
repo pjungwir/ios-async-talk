@@ -6,7 +6,7 @@
 
 * Slides may be found at [illuminatedcomputing.com](http://illuminatedcomputing.com/talks/ios-async-talk/).
 * Slide source code (Markdown) in `talk`.
-* My speaker notes at `talk/nodes.odt`.
+* My speaker notes at talk/notes.txt.
 * Example XCode project [on Github](https://github.com/pjungwir/ios-async-talk-xcode).
 * Slides built with [deck.rb](https://github.com/alexch/deck.rb).
 

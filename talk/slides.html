@@ -15,256 +15,357 @@
 <link href="deck.js/extensions/scale/deck.scale.css" rel="stylesheet">
 <link href="deck.js/themes/style/swiss.css" id="style-theme-link" rel="stylesheet">
 <link href="deck.js/themes/transition/horizontal-slide.css" id="transition-theme-link" rel="stylesheet">
-<link href="coderay.css" rel="stylesheet">
+<link href="pygments.css" rel="stylesheet">
 <link href="tables.css" rel="stylesheet">
 <link href="toc.css" rel="stylesheet">
 </head>
 <body class="deck-container">
-    <section class="slide" id="error_handling_in_nodejs"><h2>Error Handling in Node.js</h2>
+    <section class="slide" id="asynchronous_programming_in_ios"><h2>Asynchronous Programming in iOS</h2>
 
 <p>Paul A. Jungwirth</p>
 
-<p>NodePDX</p>
+<p>Illuminated Computing</p>
 
-<p>May 2013</p>
+<p>PDX iOS</p>
 
-</section><section class="slide" id="laugh_track_server"><h2>Laugh Track Server</h2>
+<p>March 2014</p>
 
-<p><img src="architecture.png" alt="Laugh Track Architecture"></p>
-
-<ul>
-<li>Asynchronous</li>
-<li>Webhook callback to indicate success or failure</li>
-</ul></section><section class="slide" id="no_error_handling"><h2>No error handling</h2>
-
-<pre class="CodeRay"><span class="keyword">function</span> <span class="function">encodeLaughTracks</span>(infile) {
-  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="integer">1</span>; i &lt;= <span class="integer">3</span>; i++) {
-    <span class="keyword">var</span> cmd = <span class="string"><span class="delimiter">"</span><span class="content">../laugh.rb -q </span><span class="delimiter">"</span></span> + i + <span class="string"><span class="delimiter">"</span><span class="content"> </span><span class="delimiter">"</span></span> + infile;
-    console.log(cmd);
-    exec(cmd, <span class="keyword">function</span> (error, stdout, stderr) {
-      <span class="keyword">if</span> (error) <span class="keyword">throw</span> error;
-      notifyCaller(infile, <span class="predefined-constant">true</span>);
-    });
-  }
-}   
-
-<span class="keyword">function</span> <span class="function">notifyCaller</span>(infile, success) {
-  console.log(<span class="string"><span class="delimiter">"</span><span class="content">finished adding laughs to </span><span class="delimiter">"</span></span> + infile);
-  <span class="comment">// HTTP POST to indicate success or failure</span>
-}
-</pre>
+</section><section class="slide" id="restaurant_review_app"><h2>Restaurant Review App</h2>
 
 <ul>
-<li>Lost requests</li>
-<li>No stack context</li>
-</ul></section><section class="slide" id="callbacks_vs_stack"><h2>Callbacks vs. Stack</h2>
-
-<pre class="CodeRay">/home/paul/src/node-errors-talk/src/orig/app.js:10
-    if (error) throw error;
-                     ^
-Error: Command failed: 
-    at ChildProcess.exithandler (child_process.js:634:15)
-    at ChildProcess.EventEmitter.emit (events.js:98:17)
-    at maybeClose (child_process.js:732:16)
-    at Process.ChildProcess._handle.onexit (child_process.js:799:5)
-</pre>
-
-</section><section class="slide" id="foreverjs"><h2>forever.js?</h2>
+<li>Pulls a list of restaurants from our server.</li>
+<li>Runs at app startup, then once an hour.</li>
+<li>The HTTP request via NSURLConnection is asynchronous.</li>
+<li>The hourly requests start from an NSTimer.</li>
+</ul></section><section class="slide" id="with_just_one_thread"><h2>With just one thread</h2>
 
 <ul>
-<li>Automatically restarts node whenever it dies.</li>
-<li>That exception will still kill our server, so now the jobs will never finish.</li>
-<li>Restart the server to keep handling requests, but all current requests just died.</li>
-</ul></section><section class="slide" id="listen_for_uncaughtexception"><h2>listen for uncaughtException?</h2>
-
-<pre class="CodeRay">process.on(<span class="string"><span class="delimiter">'</span><span class="content">uncaughtException</span><span class="delimiter">'</span></span>, <span class="keyword">function</span>(err) {
-  console.log(err);
-});
-</pre>
+<li>Your app has a "run loop".</li>
+<li>Mostly your app is just sitting there.</li>
+<li>Event callbacks happen on the main loop.</li>
+<li>Everything is one thread, unless you do something special.</li>
+</ul></section><section class="slide" id="threading_primitives"><h2>Threading primitives</h2>
 
 <ul>
-<li>Which request threw it?</li>
-<li>What is our state?</li>
-<li>Deprecated.</li>
-</ul></section><section class="slide" id="try_catch"><h2>try catch?</h2>
-
-<pre class="CodeRay"><span class="keyword">try</span> {
-  exec(cmd, <span class="keyword">function</span> (error, stdout, stderr) {
-    <span class="keyword">if</span> (error) <span class="keyword">throw</span> error;
-    notifyCaller(infile, <span class="predefined-constant">true</span>);
-  });
-} <span class="keyword">catch</span> (e) {
-  console.log(e);
-  notifyCaller(infile, <span class="predefined-constant">false</span>);
-}
-</pre>
+<li>atomic operators</li>
+<li>pthread mutexes</li>
+<li>NSLock</li>
+<li>@synchronized(obj) { }</li>
+<li>NSRecursiveLock, NSConditionLock, NSDistributedLock</li>
+<li>NSCondition</li>
+</ul></section><section class="slide" id="higherlevel_alternatives"><h2>Higher-Level Alternatives</h2>
 
 <ul>
-<li>But nothing outside the callback ever sees the exception.</li>
-<li>Callbacks start a new stack, so there is nothing to unwind!</li>
-</ul></section><section class="slide" id="domains"><h2>Domains</h2>
+<li>passing selectors to asynchronous methods</li>
+<li>passing blocks to asynchronous methods</li>
+<li>calling a selector on a different thread</li>
+<li>GCD: dispatch_async</li>
+<li>NSOperation, NSOperationQueue</li>
+</ul></section><section class="slide" id="rules"><h2>Rules</h2>
 
 <ul>
-<li>Since Node 0.8</li>
-<li>Unstable</li>
-<li>Error callbacks are scoped (sort of), not global.</li>
-</ul></section><section class="slide" id="domains"><h2>Domains</h2>
+<li>UI updates must happen on the main run loop.</li>
+<li>Must synchronize read/writes to shared data.</li>
+<li>. . . or keep all reads/writes on one thread!</li>
+</ul></section><section class="slide" id="our_restaurant_app"><h2>Our Restaurant App</h2>
 
-<pre class="CodeRay"><span class="keyword">var</span> domain = require(<span class="string"><span class="delimiter">'</span><span class="content">domain</span><span class="delimiter">'</span></span>);
+<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyAppDelegate</span> <span class="p">{</span>
+  <span class="n">NSArray</span> <span class="o">*</span><span class="n">_restaurants</span><span class="p">;</span>
+<span class="p">}</span>
 
-http.createServer(<span class="keyword">function</span>(request, response) {
-  <span class="keyword">var</span> d = domain.create();
-  <span class="keyword">var</span> queryData = url.parse(request.url, <span class="predefined-constant">true</span>).query;
-  <span class="keyword">var</span> infile = queryData[<span class="string"><span class="delimiter">'</span><span class="content">file</span><span class="delimiter">'</span></span>];
+<span class="o">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span> <span class="nl">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="n">application</span>
+  <span class="nl">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="n">launchOptions</span> <span class="p">{</span>
+  <span class="p">[</span><span class="n">self</span> <span class="n">fetchRestaurants</span><span class="p">];</span>
+<span class="p">}</span>
 
-  d.on(<span class="string"><span class="delimiter">'</span><span class="content">error</span><span class="delimiter">'</span></span>, <span class="keyword">function</span>(err) {
-    console.log(err);
-    notifyCaller(infile, <span class="predefined-constant">false</span>);
-  });
+<span class="c1">// . . .</span>
 
-  d.run(<span class="keyword">function</span>() {
-    <span class="comment">/* ... */</span>
-  });
-}).listen(<span class="integer">8086</span>);
-</pre>
+<span class="k">@end</span>
+</pre></div>
+
+
+</section><section class="slide" id="with_a_timer"><h2>With a timer</h2>
+
+<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span> <span class="nl">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="n">application</span>
+  <span class="nl">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="n">launchOptions</span> <span class="p">{</span>
+  <span class="p">[</span><span class="n">self</span> <span class="n">fetchRestaurants</span><span class="p">];</span>
+
+  <span class="p">[</span><span class="n">NSTimer</span> <span class="nl">scheduledTimerWithTimeInterval:</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span>
+                                   <span class="nl">target:</span><span class="n">self</span>
+                                 <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="n">fetchRestaurants</span><span class="p">)</span>
+                                 <span class="nl">userInfo:</span><span class="nb">nil</span>
+                                  <span class="nl">repeats:</span><span class="n">YES</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+
+
+</section><section class="slide" id="sync_http_request"><h2>Sync HTTP Request</h2>
+
+<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">fetchRestaurants</span> <span class="p">{</span>
+  <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
+  <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
+  <span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">;</span>
+  <span class="n">NSError</span> <span class="o">*</span><span class="n">err</span><span class="p">;</span>
+  <span class="n">NSData</span> <span class="o">*</span><span class="n">d</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLConnection</span> <span class="nl">sendSynchronousRequest:</span><span class="n">req</span>
+                                  <span class="nl">returningResponse:</span><span class="o">&amp;</span><span class="n">resp</span>
+                                              <span class="nl">error:</span><span class="o">&amp;</span><span class="n">err</span><span class="p">];</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">d</span><span class="p">];</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+</section><section class="slide" id="async_http_request"><h2>Async HTTP Request</h2>
+
+<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">fetchRestaurants</span> <span class="p">{</span>
+  <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
+  <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
+  <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">];</span>
+  <span class="p">[</span><span class="n">NSURLConnection</span> <span class="nl">sendAsynchronousRequest:</span><span class="n">req</span>
+                                       <span class="nl">queue:</span><span class="n">q</span>
+                             <span class="nl">completionHandler:</span>
+    <span class="o">^</span><span class="p">(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">,</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">d</span><span class="p">];</span>
+      <span class="p">}</span>
+    <span class="p">}];</span>
+<span class="p">}</span>
+</pre></div>
+
+
+</section><section class="slide" id="parsing_the_json"><h2>Parsing the JSON</h2>
+
+<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyRestaurant</span> <span class="p">{</span>
+<span class="o">+</span> <span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span> <span class="nl">parseJSON:</span><span class="p">(</span><span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="n">d</span> <span class="p">{</span>
+  <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="n">new</span><span class="p">];</span>
+  <span class="n">NSError</span> <span class="o">*</span><span class="n">jsonError</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+  <span class="n">NSArray</span> <span class="o">*</span><span class="n">restFile</span> <span class="o">=</span>
+    <span class="p">[</span><span class="n">NSJSONSerialization</span> <span class="nl">JSONObjectWithData:</span><span class="n">d</span>
+                                    <span class="nl">options:</span><span class="mi">0</span>
+                                      <span class="nl">error:</span><span class="o">&amp;</span><span class="n">jsonError</span><span class="p">];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">dict</span> <span class="k">in</span> <span class="n">restFile</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">MyRestaurant</span> <span class="o">*</span><span class="n">r</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MyRestaurant</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithDictionary:</span><span class="n">dict</span><span class="p">];</span>
+    <span class="p">[</span><span class="n">restaurants</span> <span class="nl">addObject:</span><span class="n">r</span><span class="p">];</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">restaurants</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+</section><section class="slide" id="async_parsing_with_nsoperation"><h2>Async parsing with NSOperation</h2>
 
 <ul>
-<li>Still can leak memory</li>
-<li>Need to kill the ps on error</li>
-<li>Still no stacktrace</li>
-</ul></section><section class="slide" id="cluster__domains"><h2>Cluster + Domains</h2>
+<li>define an operation to do the parsing</li>
+<li>add it to the queue</li>
+<li>post a notification when done</li>
+</ul>
+<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyParseRestaurantsOperation</span> <span class="p">{</span>
+    <span class="n">NSData</span> <span class="o">*</span><span class="n">_data</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nl">initWithData:</span><span class="p">(</span><span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="n">d</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">])</span> <span class="p">{</span>
+        <span class="n">self</span><span class="o">-&gt;</span><span class="n">_data</span> <span class="o">=</span> <span class="n">d</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">main</span> <span class="p">{</span>
+    <span class="n">self</span><span class="p">.</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">_data</span><span class="p">];</span>
+    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span>
+      <span class="nl">postNotificationName:</span><span class="s">@"ParseRestaurantsOperationFinished"</span>
+                                                   <span class="nl">object:</span><span class="n">self</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="k">@end</span>
+</pre></div>
+
+
+</section><section class="slide" id="async_parsing_with_nsoperationqueue"><h2>Async parsing with NSOperationQueue</h2>
+
+<div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
+    <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
+    <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
+    <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">];</span>
+    <span class="p">[</span><span class="n">NSURLConnection</span> <span class="nl">sendAsynchronousRequest:</span><span class="n">req</span>
+                                       <span class="nl">queue:</span><span class="n">q</span>
+                           <span class="nl">completionHandler:</span>
+     <span class="o">^</span><span class="p">(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">,</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
+         <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+             <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">op</span> <span class="o">=</span>
+               <span class="p">[[</span><span class="n">MyParseRestaurantsOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithData:</span><span class="n">d</span><span class="p">];</span>
+             <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span> <span class="nl">addObserver:</span><span class="n">self</span>
+                             <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">parsedRestaurants:</span><span class="p">)</span>
+                          <span class="nl">name:</span><span class="s">@"ParseRestaurantsOperationFinished"</span>
+                                                         <span class="nl">object:</span><span class="n">op</span><span class="p">];</span>
+             <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">background</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">new</span><span class="p">];</span>
+             <span class="p">[</span><span class="n">background</span> <span class="nl">addOperation:</span><span class="n">op</span><span class="p">];</span>
+         <span class="p">}</span>
+     <span class="p">}];</span>
+<span class="p">}</span>
+</pre></div>
+
+
+</section><section class="slide" id="getting_an_nsnotification_from_our_queue"><h2>Getting an NSNotification from our queue.</h2>
+
+<div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">parsedRestaurants:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="n">n</span> <span class="p">{</span>
+    <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
+      <span class="nl">withObject:</span><span class="p">((</span><span class="n">MyParseRestaurantsOperation</span><span class="o">*</span><span class="p">)[</span><span class="n">n</span> <span class="n">object</span><span class="p">]).</span><span class="n">restaurants</span>
+                                                      <span class="nl">waitUntilDone:</span><span class="n">NO</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">updateRestaurants:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="n">restaurants</span> <span class="p">{</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants</span> <span class="o">=</span> <span class="n">restaurants</span><span class="p">;</span>
+    <span class="p">[((</span><span class="n">MyViewController</span> <span class="o">*</span><span class="p">)</span><span class="n">self</span><span class="p">.</span><span class="n">window</span><span class="p">.</span><span class="n">rootViewController</span><span class="p">).</span><span class="n">tableView</span> <span class="n">reloadData</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+
+
+</section><section class="slide" id="setcompletionblock_to_avoid_notifications"><h2>setCompletionBlock to avoid notifications</h2>
+
+<div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+  <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">op</span> <span class="o">=</span>
+    <span class="p">[[</span><span class="n">MyParseRestaurantsOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithData:</span><span class="n">d</span><span class="p">];</span>
+  <span class="p">[</span><span class="n">op</span> <span class="nl">setCompletionBlock:</span><span class="o">^</span><span class="p">{</span>
+    <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
+                                          <span class="nl">withObject:</span><span class="n">op</span><span class="p">.</span><span class="n">restaurants</span>
+                                                  <span class="nl">waitUntilDone:</span><span class="n">NO</span><span class="p">];</span>
+  <span class="p">}];</span>
+  <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">background</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">new</span><span class="p">];</span>
+  <span class="p">[</span><span class="n">background</span> <span class="nl">addOperation:</span><span class="n">op</span><span class="p">];</span>
+</pre></div>
+
+
+</section><section class="slide" id="retain_cycles"><h2>Retain Cycles</h2>
+
+<p><img src="retain-cycle.png" alt="Retain Cycle"></p>
+
+</section><section class="slide" id="blocks_and_retain_cycles"><h2>Blocks and retain cycles</h2>
+
+<p><a href="https://developer.apple.com/videos/wwdc/2011/">https://developer.apple.com/videos/wwdc/2011/</a></p>
 
 <ul>
-<li>Separate ps for each Cluster.</li>
-<li>Kill just the ps that error'ed.</li>
-<li>Give other requests time to finish first.</li>
-<li>One ps per core?</li>
-<li>Experimental</li>
-</ul></section><section class="slide" id="just_cluster"><h2>Just Cluster</h2>
+<li>WWDC 2011: Blocks and Grand Central Dispatch in Practice</li>
+<li>WWDC 2011: Objective-C Advancements in Depth</li>
+</ul>
+<p>If a block is <em>copied</em>, then it retains whatever it closed over.</p>
 
-<pre class="CodeRay"><span class="keyword">var</span> cluster = require(<span class="string"><span class="delimiter">'</span><span class="content">cluster</span><span class="delimiter">'</span></span>);
-<span class="keyword">var</span> cpus = require(<span class="string"><span class="delimiter">'</span><span class="content">os</span><span class="delimiter">'</span></span>).cpus().length;
+<p>If you are in turn retaining the block (perhaps indirectly), you have a retain cycle.</p>
 
-<span class="keyword">if</span> (cluster.isMaster) {
-  <span class="comment">// fork workers</span>
-  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="integer">0</span>; i &lt; cpus; i++) {
-    cluster.fork();
-  }
+<p>Usually it's a problem with <code>self</code>.</p>
 
-  cluster.on(<span class="string"><span class="delimiter">'</span><span class="content">exit</span><span class="delimiter">'</span></span>, <span class="keyword">function</span>(worker, code, signal) {
-    console.log(<span class="string"><span class="delimiter">'</span><span class="content">worker </span><span class="delimiter">'</span></span> + worker.process.pid + <span class="string"><span class="delimiter">'</span><span class="content"> died</span><span class="delimiter">'</span></span>);
-  });
+<p>Watch out closing over _ivars!</p>
 
-} <span class="keyword">else</span> {
-  http.createServer(<span class="keyword">function</span>(request, response) {
-    <span class="comment">/* ... */</span>
-  }).listen(<span class="integer">8086</span>);
-}
-</pre>
+</section><section class="slide" id="setcompletionblock_copies_the_block"><h2>setCompletionBlock copies the block</h2>
 
-</section><section class="slide" id="cluster__domains"><h2>Cluster + Domains</h2>
+<p><img src="setCompletionBlock.png" alt="setCompletionBlock docs"></p>
 
-<pre class="CodeRay"><span class="keyword">if</span> (cluster.isMaster) {
-  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="integer">0</span>; i &lt; cpus; i++) {
-    cluster.fork();
-  }
+</section><section class="slide" id="setcompletionblock_without_memory_leak"><h2>setCompletionBlock without memory leak</h2>
 
-  cluster.on(<span class="string"><span class="delimiter">'</span><span class="content">disconnect</span><span class="delimiter">'</span></span>, <span class="keyword">function</span>(worker) {
-    console.log(<span class="string"><span class="delimiter">'</span><span class="content">worker </span><span class="delimiter">'</span></span> + worker.process.pid + <span class="string"><span class="delimiter">'</span><span class="content"> died</span><span class="delimiter">'</span></span>);
-    cluster.fork();
-  }); 
+<ul>
+<li>Close over a weak reference.</li>
+<li>Give the block its own strong reference.</li>
+<li>Make sure the instance didn't disappear in the meantime.</li>
+</ul>
+<div class="highlight"><pre><span class="c1">// MyAppDelegate.m:</span>
+  <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">op</span> <span class="o">=</span>
+    <span class="p">[[</span><span class="n">MyParseRestaurantsOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithData:</span><span class="n">d</span><span class="p">];</span>
+  <span class="n">__weak</span> <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">weakOp</span> <span class="o">=</span> <span class="n">op</span><span class="p">;</span>
 
-} <span class="keyword">else</span> {
-  http.createServer(<span class="keyword">function</span>(request, response) {
-    <span class="keyword">var</span> d = domain.create();
-    <span class="keyword">var</span> infile = <span class="comment">/* ... */</span>;
-    d.on(<span class="string"><span class="delimiter">'</span><span class="content">error</span><span class="delimiter">'</span></span>, <span class="keyword">function</span>(err) {
-      console.log(err.stack);
-      notifyCaller(infile, <span class="predefined-constant">false</span>);
+  <span class="p">[</span><span class="n">d</span> <span class="nl">setCompletionBlock:</span><span class="o">^</span><span class="p">{</span>
+    <span class="n">MyParseRestaurantsOperation</span> <span class="o">*</span><span class="n">strongOp</span> <span class="o">=</span> <span class="n">weakOp</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">strongOp</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="p">[</span><span class="n">self</span> <span class="nl">performSelectorOnMainThread:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">updateRestaurants:</span><span class="p">)</span>
+                                    <span class="nl">withObject:</span><span class="n">strongOp</span><span class="p">.</span><span class="n">restaurants</span>
+                                                  <span class="nl">waitUntilDone:</span><span class="n">NO</span><span class="p">];</span>
+  <span class="p">}];</span>
+  <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">background</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">new</span><span class="p">];</span>
+  <span class="p">[</span><span class="n">background</span> <span class="nl">addOperation:</span><span class="n">op</span><span class="p">];</span>
+</pre></div>
 
-      <span class="keyword">try</span> {
-        <span class="comment">// Ten minutes to let other connections finish:</span>
-        <span class="keyword">var</span> killTimer = setTimeout(<span class="keyword">function</span>() {
-          process.exit(<span class="integer">1</span>);
-        }, <span class="integer">10</span> * <span class="integer">60000</span>);
-        killTimer.unref(); <span class="comment">// Don't stay up just for the timer</span>
-        cluster.worker.disconnect(); <span class="comment">// Stop taking new requests</span>
-      } <span class="keyword">catch</span> (err2) {
-        console.log(<span class="string"><span class="delimiter">"</span><span class="content">Error handling error!: </span><span class="delimiter">"</span></span> + err2);
-      } 
-    });
 
-    d.add(request);  <span class="comment">// Explicit binding</span>
-    d.add(response); <span class="comment">// Explicit binding</span>
+</section><section class="slide" id="async_parsing_with_gcd"><h2>Async parsing with GCD</h2>
 
-    d.run(<span class="keyword">function</span>() {
-      <span class="comment">/* ... */</span>
-    });
-  }).listen(<span class="integer">8086</span>);
-} 
-</pre>
+<p>Set up a dispatch_queue with GCD:</p>
 
-</section><section class="slide" id="full_stack_traces_with_longjohn"><h2>Full Stack Traces with longjohn</h2>
+<div class="highlight"><pre><span class="k">@implementation</span> <span class="nc">MyAppDelegate</span> <span class="p">{</span>
+  <span class="n">NSArray</span> <span class="o">*</span><span class="n">_restaurants</span><span class="p">;</span>
+  <span class="n">dispatch_queue_t</span> <span class="n">_restaurants_queue</span><span class="p">;</span>
+<span class="p">}</span>
 
-<pre class="CodeRay"><span class="comment">// package.json:</span>
-{  
-  <span class="key"><span class="delimiter">"</span><span class="content">name</span><span class="delimiter">"</span></span>: <span class="string"><span class="delimiter">"</span><span class="content">NodeExceptionsDemo</span><span class="delimiter">"</span></span>,
-  <span class="key"><span class="delimiter">"</span><span class="content">dependencies</span><span class="delimiter">"</span></span>: { 
-    <span class="key"><span class="delimiter">"</span><span class="content">longjohn</span><span class="delimiter">"</span></span>: <span class="string"><span class="delimiter">"</span><span class="delimiter">"</span></span>
-  } 
-}   
+<span class="o">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nl">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="n">application</span>
+  <span class="nl">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="n">launchOptions</span> <span class="p">{</span>
+  <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants_queue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="s">"com.example.restaurants"</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span>
+  <span class="p">[</span><span class="n">self</span> <span class="n">fetchRestaurants</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
 
-<span class="comment">// app.js:</span>
-require(<span class="string"><span class="delimiter">'</span><span class="content">longjohn</span><span class="delimiter">'</span></span>)
-</pre>
 
-</section><section class="slide" id="longjohn_stack_trace"><h2>longjohn Stack Trace:</h2>
+</section><section class="slide" id="async_parsing_with_gcd"><h2>Async parsing with GCD</h2>
 
-<pre class="CodeRay">Error: Command failed: 
-    at exithandler (child_process.js:634:15)
-    at EventEmitter.emit (events.js:98:17)
-    at maybeClose (child_process.js:732:16)
-    at Socket.&lt;anonymous&gt; (child_process.js:945:11)
-    at EventEmitter.emit (events.js:95:17)
-    at Pipe.close (net.js:451:12)
----------------------------------------------
-    at exports.execFile (child_process.js:688:9)
-    at exports.exec (child_process.js:575:18)
-    at encodeLaughTracks (/home/paul/src/node-errors-talk/src/longjohn/app.js:14:5)
-    at /home/paul/src/node-errors-talk/src/longjohn/app.js:56:9
-    at b (domain.js:183:18)
-    at Domain.run (domain.js:123:23)
-    at Server.&lt;anonymous&gt; (/home/paul/src/node-errors-talk/src/longjohn/app.js:52:7)
-</pre>
+<p>Do our parsing on our own queue:</p>
+
+<div class="highlight"><pre><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">fetchRestaurants</span> <span class="p">{</span>
+  <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">kAPIRestaurantsURL</span><span class="p">];</span>
+  <span class="n">NSURLRequest</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURLRequest</span> <span class="nl">requestWithURL:</span><span class="n">url</span><span class="p">];</span>
+  <span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">];</span>
+  <span class="p">[</span><span class="n">NSURLConnection</span> <span class="nl">sendAsynchronousRequest:</span><span class="n">req</span>
+                                     <span class="nl">queue:</span><span class="n">q</span>
+                         <span class="nl">completionHandler:</span>
+    <span class="o">^</span><span class="p">(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">resp</span><span class="p">,</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">dispatch_async</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants_queue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+          <span class="n">NSArray</span> <span class="o">*</span><span class="n">restaurants</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyRestaurant</span> <span class="nl">parseJSON:</span><span class="n">d</span><span class="p">];</span>
+          <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
+            <span class="n">self</span><span class="o">-&gt;</span><span class="n">_restaurants</span> <span class="o">=</span> <span class="n">restaurants</span><span class="p">;</span>
+          <span class="p">});</span>
+        <span class="p">});</span>
+      <span class="p">}</span>
+    <span class="p">}];</span>
+<span class="p">}</span>
+</pre></div>
+
 
 </section><section class="slide" id="references_and_further_reading"><h2>References and Further Reading</h2>
 
 <ul>
-<li><a href="http://nodejs.org/api/domain.html">http://nodejs.org/api/domain.html</a></li>
-<li><a href="http://nodejs.org/api/cluster.html">http://nodejs.org/api/cluster.html</a></li>
-<li><a href="http://shapeshed.com/uncaught-exceptions-in-node/">http://shapeshed.com/uncaught-exceptions-in-node/</a></li>
-<li><a href="http://stackoverflow.com/questions/7310521/node-js-best-practice-exception-handling">http://stackoverflow.com/questions/7310521/node-js-best-practice-exception-handling</a></li>
-<li><a href="https://groups.google.com/forum/?fromgroups#!msg/nodejs/5R6kPncBGwE/woBz84kwMcAJ">https://groups.google.com/forum/?fromgroups#!msg/nodejs/5R6kPncBGwE/woBz84kwMcAJ</a></li>
-<li><a href="https://github.com/mattinsler/longjohn">https://github.com/mattinsler/longjohn</a></li>
-<li><a href="https://github.com/pjungwir/node-errors-talk">https://github.com/pjungwir/node-errors-talk</a></li>
+<li><a href="https://developer.apple.com/videos/wwdc/2011/">https://developer.apple.com/videos/wwdc/2011/</a></li>
+<li><a href="http://www.raywenderlich.com/4295/multithreading-and-grand-central-dispatch-on-ios-for-beginners-tutorial">http://www.raywenderlich.com/4295/multithreading-and-grand-central-dispatch-on-ios-for-beginners-tutorial</a></li>
+<li><a href="http://www.raywenderlich.com/19788/how-to-use-nsoperations-and-nsoperationqueues">http://www.raywenderlich.com/19788/how-to-use-nsoperations-and-nsoperationqueues</a></li>
+<li><a href="http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341">http://www.amazon.com/Programming-iOS-7-Matt-Neuburg/dp/1449372341</a></li>
+<li><a href="https://github.com/pjungwir/ios-async-talk">https://github.com/pjungwir/ios-async-talk</a></li>
+<li><a href="https://github.com/pjungwir/ios-async-talk-xcode">https://github.com/pjungwir/ios-async-talk-xcode</a></li>
 </ul></section><a class="deck-prev-link" href="#" title="Previous"></a><a class="deck-next-link" href="#" title="Next"></a>    <div class="slide_toc">      <div class="toggle">[contents]</div>
       <div class="table">
         <h2>deck.rb presentation</h2>
         <ul>
-<li><a href="#error_handling_in_nodejs">Error Handling in Node.js</a></li>
-          <li><a href="#laugh_track_server">Laugh Track Server</a></li>
-          <li><a href="#no_error_handling">No error handling</a></li>
-          <li><a href="#callbacks_vs_stack">Callbacks vs. Stack</a></li>
-          <li><a href="#foreverjs">forever.js?</a></li>
-          <li><a href="#listen_for_uncaughtexception">listen for uncaughtException?</a></li>
-          <li><a href="#try_catch">try catch?</a></li>
-          <li><a href="#domains">Domains</a></li>
-          <li><a href="#domains">Domains</a></li>
-          <li><a href="#cluster__domains">Cluster + Domains</a></li>
-          <li><a href="#just_cluster">Just Cluster</a></li>
-          <li><a href="#cluster__domains">Cluster + Domains</a></li>
-          <li><a href="#full_stack_traces_with_longjohn">Full Stack Traces with longjohn</a></li>
-          <li><a href="#longjohn_stack_trace">longjohn Stack Trace:</a></li>
+<li><a href="#asynchronous_programming_in_ios">Asynchronous Programming in iOS</a></li>
+          <li><a href="#restaurant_review_app">Restaurant Review App</a></li>
+          <li><a href="#with_just_one_thread">With just one thread</a></li>
+          <li><a href="#threading_primitives">Threading primitives</a></li>
+          <li><a href="#higherlevel_alternatives">Higher-Level Alternatives</a></li>
+          <li><a href="#rules">Rules</a></li>
+          <li><a href="#our_restaurant_app">Our Restaurant App</a></li>
+          <li><a href="#with_a_timer">With a timer</a></li>
+          <li><a href="#sync_http_request">Sync HTTP Request</a></li>
+          <li><a href="#async_http_request">Async HTTP Request</a></li>
+          <li><a href="#parsing_the_json">Parsing the JSON</a></li>
+          <li><a href="#async_parsing_with_nsoperation">Async parsing with NSOperation</a></li>
+          <li><a href="#async_parsing_with_nsoperationqueue">Async parsing with NSOperationQueue</a></li>
+          <li><a href="#getting_an_nsnotification_from_our_queue">Getting an NSNotification from our queue.</a></li>
+          <li><a href="#setcompletionblock_to_avoid_notifications">setCompletionBlock to avoid notifications</a></li>
+          <li><a href="#retain_cycles">Retain Cycles</a></li>
+          <li><a href="#blocks_and_retain_cycles">Blocks and retain cycles</a></li>
+          <li><a href="#setcompletionblock_copies_the_block">setCompletionBlock copies the block</a></li>
+          <li><a href="#setcompletionblock_without_memory_leak">setCompletionBlock without memory leak</a></li>
+          <li><a href="#async_parsing_with_gcd">Async parsing with GCD</a></li>
+          <li><a href="#async_parsing_with_gcd">Async parsing with GCD</a></li>
           <li><a href="#references_and_further_reading">References and Further Reading</a></li>
         </ul>
 </div>
