@@ -387,6 +387,70 @@ Watch out closing over _ivars!
 
 
 
+# Block as NSOperation
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@@@ objc
+// MyAppDelegate.m:
+
+- (void)fetchRestaurants {
+    NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
+    NSURLRequest *req = [NSURLRequest requestWithURL:url];
+    NSOperationQueue *q = [NSOperationQueue mainQueue];
+    [NSURLConnection sendAsynchronousRequest:req
+                                       queue:q
+                           completionHandler:
+     ^(NSURLResponse *resp, NSData *d, NSError *err) {
+         if (d) {
+             NSOperationQueue *background = [NSOperationQueue new];
+             [background addOperationWithBlock:^{
+                 NSArray *restaurants = [MyRestaurant parseJSON:self->_data];
+                 [self performSelectorOnMainThread:@selector(updateRestaurants:)
+                                                          withObject:restaurants
+                                                               waitUntilDone:NO];
+             }];
+         }
+     }];
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.notes No need to subclass NSOperation.
+.notes But now there's no place to call setCompletionBlock, so back to trampolining.
+
+
+
+
+# Do the NSURLConnection callback on a different queue
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@@@ objc
+// MyAppDelegate.m:
+
+- (void)fetchRestaurants {
+    NSURL *url = [NSURL URLWithString:kAPIRestaurantsURL];
+    NSURLRequest *req = [NSURLRequest requestWithURL:url];
+    NSOperationQueue *q = [NSOperationQueue new];
+    [NSURLConnection sendAsynchronousRequest:req
+                                       queue:q
+                           completionHandler:
+     ^(NSURLResponse *resp, NSData *d, NSError *err) {
+         if (d) {
+             NSArray *restaurants = [MyRestaurant parseJSON:self->_data];
+             [self performSelectorOnMainThread:@selector(updateRestaurants:)
+                                                      withObject:restaurants
+                                                           waitUntilDone:NO];
+         }
+     }];
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.notes Note q is no longer the main queue.
+.notes Again, no need for separate NSOperation subclass.
+.notes Still a hassle to get back onto main thread.
+
+
+
+
 # Async parsing with GCD
 
 Set up a dispatch_queue with GCD:
@@ -431,6 +495,7 @@ Do our parsing on our own queue:
           NSArray *restaurants = [MyRestaurant parseJSON:d];
           dispatch_async(dispatch_get_main_queue(), ^{
             self->_restaurants = restaurants;
+            [((MyViewController *)self.window.rootViewController).tableView reloadData];
           });
         });
       }
@@ -438,6 +503,11 @@ Do our parsing on our own queue:
 }
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.notes Everything is right here: the JSON parsing, the state & UI update.
+.notes WWDC 2011 videos mention dispatch_retain/dispatch_release; no need for that with ARC in iOS6+.
+
+
 
 
 # References and Further Reading
